@@ -1,0 +1,35 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function chatDoc(chatId) {
+      return firestore.get(/databases/(default)/documents/chats/$(chatId));
+    }
+
+    function isChatMember(chatId) {
+      return signedIn() && request.auth.uid in chatDoc(chatId).data.members;
+    }
+
+    match /chat_media/{chatId}/{allPaths=**} {
+      allow read, write: if isChatMember(chatId);
+    }
+
+    match /voice/{chatId}/{allPaths=**} {
+      allow read, write: if isChatMember(chatId);
+    }
+
+    match /avatars/{uid}.jpg {
+      allow read: if signedIn();
+      allow write: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /group_avatars/{chatId}.jpg {
+      allow read: if signedIn();
+      allow write: if isChatMember(chatId);
+    }
+  }
+}
