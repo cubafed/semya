@@ -1,10 +1,29 @@
 import * as admin from "firebase-admin";
+import {
+  FieldValue,
+  Timestamp,
+  getFirestore,
+} from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { randomBytes } from "crypto";
 
-admin.initializeApp();
+const projectId =
+  process.env.GCLOUD_PROJECT ?? process.env.GCP_PROJECT ?? "demo-semya";
 
-const db = admin.firestore();
+// Admin must use emulators before initializeApp() — env vars set after import are ignored.
+const useEmulators =
+  process.env.FUNCTIONS_EMULATOR === "true" ||
+  !!process.env.FIREBASE_EMULATOR_HUB ||
+  projectId === "demo-semya";
+
+if (useEmulators) {
+  process.env.FIRESTORE_EMULATOR_HOST ??= "127.0.0.1:8080";
+  process.env.FIREBASE_AUTH_EMULATOR_HOST ??= "127.0.0.1:9099";
+}
+
+admin.initializeApp({ projectId });
+
+const db = getFirestore();
 
 const OWNER_SECRET = process.env.OWNER_SECRET ?? "change-me-before-release";
 
@@ -65,7 +84,7 @@ export const createSpaceAsOwner = onCall(async (request) => {
   }
 
   const spaceRef = db.collection("spaces").doc();
-  const now = admin.firestore.FieldValue.serverTimestamp();
+  const now = FieldValue.serverTimestamp();
 
   await db.runTransaction(async (tx) => {
     tx.set(spaceRef, {
@@ -85,71 +104,89 @@ export const createSpaceAsOwner = onCall(async (request) => {
   return { spaceId: spaceRef.id };
 });
 
+function inviteExpiresAt(
+  raw: FirebaseFirestore.Timestamp | { toDate?: () => Date } | undefined,
+): Date | undefined {
+  if (!raw) return undefined;
+  if (typeof raw.toDate === "function") return raw.toDate();
+  if (typeof (raw as FirebaseFirestore.Timestamp).toMillis === "function") {
+    return new Date((raw as FirebaseFirestore.Timestamp).toMillis());
+  }
+  return undefined;
+}
+
 export const redeemInvite = onCall(async (request) => {
-  const uid = requireAuth(request);
-  const { code, displayName } = request.data as {
-    code?: string;
-    displayName?: string;
-  };
+  try {
+    const uid = requireAuth(request);
+    const { code, displayName } = request.data as {
+      code?: string;
+      displayName?: string;
+    };
 
-  const normalized = code?.trim().toUpperCase();
-  if (!normalized || !displayName?.trim()) {
-    throw new HttpsError("invalid-argument", "Код и имя обязательны");
-  }
+    const normalized = code?.trim().toUpperCase();
+    if (!normalized || !displayName?.trim()) {
+      throw new HttpsError("invalid-argument", "Код и имя обязательны");
+    }
 
-  const user = await getUser(uid);
-  if (user?.spaceId) {
-    throw new HttpsError("already-exists", "Вы уже в семье");
-  }
+    const user = await getUser(uid);
+    if (user?.spaceId) {
+      throw new HttpsError("already-exists", "Вы уже в семье");
+    }
 
-  const invites = await db
-    .collectionGroup("invites")
-    .where("code", "==", normalized)
-    .limit(1)
-    .get();
+    const invites = await db
+      .collectionGroup("invites")
+      .where("code", "==", normalized)
+      .limit(1)
+      .get();
 
-  if (invites.empty) {
-    throw new HttpsError("not-found", "Код не найден");
-  }
+    if (invites.empty) {
+      throw new HttpsError("not-found", "Код не найден");
+    }
 
-  const inviteDoc = invites.docs[0];
-  const invite = inviteDoc.data();
-  const spaceId = inviteDoc.ref.parent.parent?.id;
+    const inviteDoc = invites.docs[0];
+    const invite = inviteDoc.data();
+    const spaceId = inviteDoc.ref.parent.parent?.id;
 
-  if (!spaceId) {
-    throw new HttpsError("internal", "Некорректный invite");
-  }
-  if (invite.usedBy) {
-    throw new HttpsError("failed-precondition", "Код уже использован");
-  }
-  if (invite.revoked) {
-    throw new HttpsError("failed-precondition", "Код отозван");
-  }
+    if (!spaceId) {
+      throw new HttpsError("internal", "Некорректный invite");
+    }
+    if (invite.usedBy) {
+      throw new HttpsError("failed-precondition", "Код уже использован");
+    }
+    if (invite.revoked) {
+      throw new HttpsError("failed-precondition", "Код отозван");
+    }
 
-  const expiresAt = invite.expiresAt?.toDate?.() as Date | undefined;
-  if (expiresAt && expiresAt < new Date()) {
-    throw new HttpsError("deadline-exceeded", "Срок кода истёк");
-  }
+    const expiresAt = inviteExpiresAt(invite.expiresAt);
+    if (expiresAt && expiresAt < new Date()) {
+      throw new HttpsError("deadline-exceeded", "Срок кода истёк");
+    }
 
-  await db.runTransaction(async (tx) => {
-    tx.update(inviteDoc.ref, {
-      usedBy: uid,
-      usedAt: admin.firestore.FieldValue.serverTimestamp(),
+    await db.runTransaction(async (tx) => {
+      tx.update(inviteDoc.ref, {
+        usedBy: uid,
+        usedAt: FieldValue.serverTimestamp(),
+      });
+      tx.set(
+        db.collection("users").doc(uid),
+        {
+          spaceId,
+          displayName: displayName.trim(),
+          role: "member",
+          fcmTokens: [],
+          createdAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
     });
-    tx.set(
-      db.collection("users").doc(uid),
-      {
-        spaceId,
-        displayName: displayName.trim(),
-        role: "member",
-        fcmTokens: [],
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true },
-    );
-  });
 
-  return { spaceId };
+    return { spaceId };
+  } catch (err) {
+    if (err instanceof HttpsError) throw err;
+    console.error("redeemInvite failed", err);
+    const message = err instanceof Error ? err.message : String(err);
+    throw new HttpsError("internal", message);
+  }
 });
 
 export const generateInvite = onCall(async (request) => {
@@ -172,8 +209,8 @@ export const generateInvite = onCall(async (request) => {
     .set({
       code,
       createdBy: uid,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
+      createdAt: FieldValue.serverTimestamp(),
+      expiresAt: Timestamp.fromDate(expiresAt),
       singleUse: true,
       usedBy: null,
       revoked: false,
