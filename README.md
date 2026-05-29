@@ -10,50 +10,43 @@
 
 ## Быстрый старт
 
-### 1. Flutter
+> **Путь без кириллицы:** работайте из `~/Projects/semya` (симлинк на этот проект).
+
+### 1. Flutter (уже установлен на этом Mac)
 
 ```bash
-cd "/Users/daviddaler/Documents/ШАБОЛДА"
-flutter create . --org com.family --project-name family_messenger
+export PATH="$HOME/development/flutter/bin:$PATH"
+cd ~/Projects/semya
 flutter pub get
 ```
 
-### 2. Firebase
+Если Flutter ещё нет: `bash scripts/setup.sh`
 
-1. [console.firebase.google.com](https://console.firebase.google.com) → новый проект.
-2. Включить **Anonymous Auth** в Authentication.
-3. Создать Firestore и Storage.
-4. Установить CLI: `npm i -g firebase-tools` → `firebase login`.
-5. `firebase use --add` в корне проекта.
-6. FlutterFire:
+### 2. CocoaPods (для iPhone / Mac — один раз, нужен пароль)
 
 ```bash
-dart pub global activate flutterfire_cli
-flutterfire configure
+bash scripts/install_cocoapods.sh
 ```
 
-Раскомментируйте в `lib/core/firebase/firebase_bootstrap.dart` импорт `firebase_options.dart`.
-
-### 3. Cloud Functions
+### 3. Firebase (нужен ваш Google-аккаунт)
 
 ```bash
-cd functions
-npm install
-npm run build
-cd ..
-firebase functions:config:set owner.secret="ВАШ-СЕКРЕТ"
+bash scripts/firebase_setup.sh
 ```
 
-Задайте тот же секрет в Flutter:
+Или вручную: Anonymous Auth + Firestore + Storage в [Firebase Console](https://console.firebase.google.com), затем `flutterfire configure` и раскомментируйте `firebase_options` в `lib/core/firebase/firebase_bootstrap.dart`.
+
+### 4. Cloud Functions (уже собраны локально)
 
 ```bash
-flutter run --dart-define=OWNER_SECRET=ВАШ-СЕКРЕТ
+cd functions && npm install && npm run build && cd ..
+npx firebase-tools deploy --only functions,firestore:rules,storage,firestore:indexes
 ```
 
-Или измените `AppConstants.ownerBootstrapSecret` / переменную `OWNER_SECRET` в Functions.
+Секрет владельца — в `firebase.json` → `OWNER_SECRET` и при запуске:
 
 ```bash
-firebase deploy --only functions,firestore:rules,storage,firestore:indexes
+flutter run -d macos --dart-define=OWNER_SECRET=ВАШ-СЕКРЕТ
 ```
 
 ### 4. Первый запуск
