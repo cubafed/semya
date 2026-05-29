@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "firebase-emulators",
+      "type": "shell",
+      "command": "cd \"${workspaceFolder}/functions\" && npm run build && cd .. && npx firebase-tools emulators:start --only auth,firestore,functions,storage --project demo-semya",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": { "regexp": "^.*$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "emulators:",
+          "endsPattern": "All emulators ready"
+        }
+      }
+    }
+  ]
+}

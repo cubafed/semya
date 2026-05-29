@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Семья (Chrome + эмуляторы)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--dart-define=USE_EMULATORS=true",
+        "--dart-define=OWNER_SECRET=dev-local-secret"
+      ],
+      "preLaunchTask": "firebase-emulators"
+    },
+    {
+      "name": "Семья (Chrome, без отладчика IDE)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "flutterMode": "profile",
+      "toolArgs": [
+        "--dart-define=USE_EMULATORS=true",
+        "--dart-define=OWNER_SECRET=dev-local-secret",
+        "--no-devtools"
+      ]
+    }
+  ]
+}

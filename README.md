@@ -12,6 +12,18 @@
 
 > **Путь без кириллицы:** работайте из `~/Projects/semya` (симлинк на этот проект).
 
+### Запуск за одну команду (локально, без Firebase Console)
+
+Уже установлены: Flutter, Java (для эмуляторов), демо-проект `demo-semya`.
+
+```bash
+bash ~/Projects/semya/scripts/run_dev.sh
+```
+
+Откроется Chrome. Секрет владельца: **`dev-local-secret`**. UI эмуляторов: http://localhost:4000
+
+Ошибки `AppInspector` / `Cannot find context` в IDE — безвредны; скрипт запускает с `--no-devtools`.
+
 ### 1. Flutter (уже установлен на этом Mac)
 
 ```bash

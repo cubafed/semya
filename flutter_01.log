@@ -1,0 +1,76 @@
+Flutter crash report.
+Please report a bug at https://github.com/flutter/flutter/issues.
+
+## command
+
+flutter analyze lib
+
+## exception
+
+_Exception: Exception: analysis server exited with code 255 and output:
+[stderr] #7      LspByteStreamServerChannel.listen.<anonymous closure> (package:analysis_server/src/lsp/channel/lsp_byte_stream_channel.dart:67)
+[stderr] #8      _rootRunUnary (dart:async/zone_root.dart:48)
+[stderr] #9      _CustomZone.runUnary (dart:async/zone.dart:733)
+[stderr] #10     _CustomZone.runUnaryGuarded (dart:async/zone.dart:633)
+[stderr] #11     _BufferingStreamSubscription._sendData (dart:async/stream_impl.dart:381)
+[stderr] #12     _DelayedData.perform (dart:async/stream_impl.dart:573)
+[stderr] #13     _PendingEvents.handleNext (dart:async/stream_impl.dart:678)
+[stderr] #14     _PendingEvents.schedule.<anonymous closure> (dart:async/stream_impl.dart:649)
+[stderr] #15     _rootRun (dart:async/zone_root.dart:27)
+[stderr] #16     _CustomZone.run (dart:async/zone.dart:726)
+[stderr] #17     _CustomZone.runGuarded (dart:async/zone.dart:625)
+[stderr] #18     _CustomZone.bindCallbackGuarded.<anonymous closure> (dart:async/zone.dart:666)
+[stderr] #19     _rootRun (dart:async/zone_root.dart:35)
+[stderr] #20     _CustomZone.run (dart:async/zone.dart:726)
+[stderr] #21     _CustomZone.runGuarded (dart:async/zone.dart:625)
+[stderr] #22     _CustomZone.bindCallbackGuarded.<anonymous closure> (dart:async/zone.dart:666)
+[stderr] #23     _microtaskLoop (dart:async/schedule_microtask.dart:40)
+[stderr] #24     _startMicrotaskLoop (dart:async/schedule_microtask.dart:49)
+[stderr] #25     _runPendingImmediateCallback (dart:isolate-patch/isolate_patch.dart:127)
+[stderr] #26     _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:193)
+
+```
+```
+
+## flutter doctor
+
+```
+[✓] Flutter (Channel stable, 3.44.0, on macOS 26.5 25F71 darwin-arm64, locale ru-RU) [225ms]
+    • Flutter version 3.44.0 on channel stable at /Users/daviddaler/development/flutter
+    • Upstream repository https://github.com/flutter/flutter.git
+    • Framework revision 559ffa3f75 (2 weeks ago), 2026-05-15 14:13:13 -0700
+    • Engine revision 4c525dac5e
+    • Dart version 3.12.0
+    • DevTools version 2.57.0
+    • Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-native-assets, no-enable-swift-package-manager, omit-legacy-version-file, enable-lldb-debugging, enable-uiscene-migration
+
+[✗] Android toolchain - develop for Android devices [187ms]
+    ✗ Unable to locate Android SDK.
+      Install Android Studio from: https://developer.android.com/studio/index.html
+      On first launch it will assist you in installing the Android SDK components.
+      (or visit https://flutter.dev/to/macos-android-setup for detailed instructions).
+      If the Android SDK has been installed to a custom location, please use
+      `flutter config --android-sdk` to update to that location.
+
+
+[!] Xcode - develop for iOS and macOS (Xcode 26.5) [376ms]
+    • Xcode at /Applications/Xcode.app/Contents/Developer
+    • Build 17F42
+    ! CocoaPods not installed.
+        CocoaPods is a package manager for iOS or macOS platform code.
+        Without CocoaPods, plugins will not work on iOS or macOS.
+        For more info, see https://flutter.dev/to/platform-plugins
+      For installation instructions, see https://guides.cocoapods.org/using/getting-started.html#installation
+
+[✓] Chrome - develop for the web [6ms]
+    • Chrome at /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+
+[✓] Connected device (2 available) [6,3s]
+    • macOS (desktop) • macos  • darwin-arm64   • macOS 26.5 25F71 darwin-arm64
+    • Chrome (web)    • chrome • web-javascript • Google Chrome 148.0.7778.179
+
+[✓] Network resources [66,6s]
+    • All expected network resources are available.
+
+! Doctor found issues in 2 categories.
+```

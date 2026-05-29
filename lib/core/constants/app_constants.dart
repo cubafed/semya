@@ -6,9 +6,12 @@ class AppConstants {
 
   /// Secret for creating the first family space (owner flow).
   /// Override via --dart-define=OWNER_SECRET=... in release builds.
+  static const bool useEmulators =
+      bool.fromEnvironment('USE_EMULATORS', defaultValue: true);
+
   static const String ownerBootstrapSecret = String.fromEnvironment(
     'OWNER_SECRET',
-    defaultValue: 'change-me-before-release',
+    defaultValue: useEmulators ? 'dev-local-secret' : 'change-me-before-release',
   );
 
   static const int inviteCodeLength = 8;

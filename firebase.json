@@ -19,7 +19,7 @@
       ],
       "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"],
       "environmentVariables": {
-        "OWNER_SECRET": "change-me-before-release"
+        "OWNER_SECRET": "dev-local-secret"
       }
     }
   ],
