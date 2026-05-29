@@ -25,6 +25,15 @@ lib/firebase_options.dart
 .DS_Store
 Thumbs.db
 
+# Local Ruby / CocoaPods artifacts (not used for iOS SPM build)
+.bundle/
+vendor/
+/Gemfile
+/Gemfile.lock
+
+# Xcode SwiftPM resolution (regenerated)
+macos/**/swiftpm/
+
 # Functions
 functions/node_modules/
 functions/lib/
