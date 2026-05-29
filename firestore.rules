@@ -51,6 +51,7 @@ service cloud.firestore {
 
     match /chats/{chatId} {
       allow read: if signedIn()
+        && resource != null
         && request.auth.uid in resource.data.members
         && resource.data.spaceId == mySpaceId();
       allow create: if signedIn()

@@ -22,12 +22,12 @@ service firebase.storage {
       allow read, write: if isChatMember(chatId);
     }
 
-    match /avatars/{uid}.jpg {
+    match /avatars/{uid}/{allPaths=**} {
       allow read: if signedIn();
       allow write: if signedIn() && request.auth.uid == uid;
     }
 
-    match /group_avatars/{chatId}.jpg {
+    match /group_avatars/{chatId}/{allPaths=**} {
       allow read: if signedIn();
       allow write: if isChatMember(chatId);
     }
