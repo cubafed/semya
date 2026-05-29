@@ -43,4 +43,27 @@ class UserRepository {
       SetOptions(merge: true),
     );
   }
+
+  Future<void> updatePhotoUrl(String uid, String photoUrl) async {
+    await _users.doc(uid).set(
+      {'photoUrl': photoUrl},
+      SetOptions(merge: true),
+    );
+  }
+
+  Future<void> addFcmToken(String uid, String token) async {
+    if (token.isEmpty) return;
+    await _users.doc(uid).set(
+      {'fcmTokens': FieldValue.arrayUnion([token])},
+      SetOptions(merge: true),
+    );
+  }
+
+  Future<void> removeFcmToken(String uid, String token) async {
+    if (token.isEmpty) return;
+    await _users.doc(uid).set(
+      {'fcmTokens': FieldValue.arrayRemove([token])},
+      SetOptions(merge: true),
+    );
+  }
 }

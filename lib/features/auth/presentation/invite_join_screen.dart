@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/errors/app_errors.dart';
 import '../../../core/providers/session_provider.dart';
 import '../../../data/repositories/invite_repository.dart';
 
@@ -88,7 +89,7 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Не удалось войти: $e')),
+          SnackBar(content: Text(friendlyErrorMessage(e))),
         );
       }
     } finally {

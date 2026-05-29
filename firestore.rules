@@ -50,10 +50,11 @@ service cloud.firestore {
     }
 
     match /chats/{chatId} {
+      // resource == null: get before create (getOrCreateDirectChat)
       allow read: if signedIn()
-        && resource != null
-        && request.auth.uid in resource.data.members
-        && resource.data.spaceId == mySpaceId();
+        && (resource == null
+            || (request.auth.uid in resource.data.members
+                && resource.data.spaceId == mySpaceId()));
       allow create: if signedIn()
         && request.resource.data.spaceId == mySpaceId()
         && request.auth.uid in request.resource.data.members;
@@ -73,14 +74,19 @@ service cloud.firestore {
     }
 
     match /calls/{callId} {
-      allow read, write: if signedIn()
+      allow read: if signedIn()
+        && (resource == null
+            || request.auth.uid == resource.data.callerId
+            || request.auth.uid == resource.data.calleeId);
+      allow create: if signedIn()
+        && request.resource.data.callerId == request.auth.uid;
+      allow update: if signedIn()
         && (request.auth.uid == resource.data.callerId
-            || request.auth.uid == resource.data.calleeId
-            || request.auth.uid == request.resource.data.callerId
-            || request.auth.uid == request.resource.data.calleeId);
+            || request.auth.uid == resource.data.calleeId);
 
       match /candidates/{candidateId} {
-        allow read, write: if signedIn();
+        allow read, create: if signedIn();
+        allow update, delete: if false;
       }
     }
   }

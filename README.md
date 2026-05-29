@@ -90,14 +90,18 @@ lib/
 functions/       createSpaceAsOwner, redeemInvite, generateInvite
 ```
 
-## Что уже есть / что дальше
+## Что уже есть
 
-| Готово | В плане |
-|--------|---------|
-| Anonymous Auth + invite-коды | Push (FCM + Functions) |
-| 1-на-1 текстовые чаты | Фото/видео, голосовые |
-| Список семьи | WebRTC звонки |
-| Firestore rules | Группы, App Check в prod |
+| Функция | Статус |
+|---------|--------|
+| Anonymous Auth + invite-коды | Готово |
+| 1-на-1 текстовые чаты + превью | Готово |
+| Статусы прочтения (галочки) | Готово |
+| Аватары (Storage) | Готово |
+| Фото и голосовые в чате | Готово (iOS/Android; на iOS нужен CocoaPods для плагинов) |
+| Push FCM (`onChatMessageCreated`) | Готово (на устройстве + APNs) |
+| WebRTC аудио-звонки (базово) | Готово |
+| Продакшен-чеклист | [docs/PRODUCTION.md](docs/PRODUCTION.md) |
 
 ## Безопасность
 

@@ -10,6 +10,7 @@ class ChatMessage {
     required this.createdAt,
     this.text,
     this.mediaUrl,
+    this.durationMs,
     this.readBy = const [],
   });
 
@@ -18,6 +19,7 @@ class ChatMessage {
   final MessageType type;
   final String? text;
   final String? mediaUrl;
+  final int? durationMs;
   final DateTime createdAt;
   final List<String> readBy;
 
@@ -31,6 +33,7 @@ class ChatMessage {
       type: _parseType(data['type'] as String?),
       text: data['text'] as String?,
       mediaUrl: data['mediaUrl'] as String?,
+      durationMs: data['durationMs'] as int?,
       createdAt:
           (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       readBy: List<String>.from(data['readBy'] as List? ?? []),

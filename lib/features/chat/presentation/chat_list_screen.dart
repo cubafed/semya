@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/errors/app_errors.dart';
 import '../../../core/providers/session_provider.dart';
+import '../../../shared/widgets/user_avatar.dart';
+import '../../../data/models/app_user.dart';
 import '../../../data/models/chat.dart';
 import '../../../data/repositories/chat_repository.dart';
 import '../../contacts/presentation/family_screen.dart';
@@ -11,7 +14,7 @@ import '../../contacts/presentation/family_screen.dart';
 final chatsProvider = StreamProvider.autoDispose<List<Chat>>((ref) {
   final session = ref.watch(sessionProvider);
   final user = session.appUser;
-  if (user == null) return const Stream.empty();
+  if (user == null) return Stream.value(const []);
   return ref.watch(chatRepositoryProvider).watchChatsForUser(
         spaceId: user.spaceId,
         uid: user.uid,
@@ -35,6 +38,12 @@ class ChatListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Привет, ${session.appUser?.displayName ?? ''}'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            onPressed: () => context.push('/home/profile'),
+          ),
+        ],
       ),
       body: chatsAsync.when(
         data: (chats) {
@@ -60,12 +69,23 @@ class ChatListScreen extends ConsumerWidget {
               final title = chat.type == ChatType.group
                   ? (chat.groupName ?? 'Группа')
                   : (nameByUid[peerUid] ?? 'Чат');
+              String? peerPhoto;
+              for (final u in membersAsync.valueOrNull ?? <AppUser>[]) {
+                if (u.uid == peerUid) {
+                  peerPhoto = u.photoUrl;
+                  break;
+                }
+              }
               final preview = chat.lastMessage?.text ?? 'Нет сообщений';
               final time = chat.updatedAt != null
                   ? DateFormat.Hm().format(chat.updatedAt!)
                   : '';
 
               return ListTile(
+                leading: UserAvatar(
+                  displayName: title,
+                  photoUrl: peerPhoto,
+                ),
                 title: Text(title),
                 subtitle: Text(
                   preview,
@@ -79,7 +99,7 @@ class ChatListScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Ошибка: $e')),
+        error: (e, _) => Center(child: Text(friendlyErrorMessage(e))),
       ),
     );
   }

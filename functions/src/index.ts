@@ -5,6 +5,8 @@ import {
   getFirestore,
 } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
+import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { getMessaging } from "firebase-admin/messaging";
 import { randomBytes } from "crypto";
 
 const projectId =
@@ -143,27 +145,40 @@ export const redeemInvite = onCall(async (request) => {
       throw new HttpsError("not-found", "Код не найден");
     }
 
-    const inviteDoc = invites.docs[0];
-    const invite = inviteDoc.data();
-    const spaceId = inviteDoc.ref.parent.parent?.id;
+    const inviteDocRef = invites.docs[0].ref;
 
-    if (!spaceId) {
-      throw new HttpsError("internal", "Некорректный invite");
-    }
-    if (invite.usedBy) {
-      throw new HttpsError("failed-precondition", "Код уже использован");
-    }
-    if (invite.revoked) {
-      throw new HttpsError("failed-precondition", "Код отозван");
-    }
+    const result = await db.runTransaction(async (tx) => {
+      const fresh = await tx.get(inviteDocRef);
+      if (!fresh.exists) {
+        throw new HttpsError("not-found", "Код не найден");
+      }
+      const invite = fresh.data()!;
+      const spaceId = fresh.ref.parent.parent?.id;
 
-    const expiresAt = inviteExpiresAt(invite.expiresAt);
-    if (expiresAt && expiresAt < new Date()) {
-      throw new HttpsError("deadline-exceeded", "Срок кода истёк");
-    }
+      if (!spaceId) {
+        throw new HttpsError("internal", "Некорректный invite");
+      }
+      if (invite.usedBy) {
+        throw new HttpsError("failed-precondition", "Код уже использован");
+      }
+      if (invite.revoked) {
+        throw new HttpsError("failed-precondition", "Код отозван");
+      }
 
-    await db.runTransaction(async (tx) => {
-      tx.update(inviteDoc.ref, {
+      const expiresAt = inviteExpiresAt(invite.expiresAt);
+      if (expiresAt && expiresAt < new Date()) {
+        throw new HttpsError("deadline-exceeded", "Срок кода истёк");
+      }
+
+      const trimmedName = displayName.trim();
+      if (trimmedName.length < 1 || trimmedName.length > 64) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Имя должно быть от 1 до 64 символов",
+        );
+      }
+
+      tx.update(fresh.ref, {
         usedBy: uid,
         usedAt: FieldValue.serverTimestamp(),
       });
@@ -171,16 +186,18 @@ export const redeemInvite = onCall(async (request) => {
         db.collection("users").doc(uid),
         {
           spaceId,
-          displayName: displayName.trim(),
+          displayName: trimmedName,
           role: "member",
           fcmTokens: [],
           createdAt: FieldValue.serverTimestamp(),
         },
         { merge: true },
       );
+
+      return { spaceId };
     });
 
-    return { spaceId };
+    return result;
   } catch (err) {
     if (err instanceof HttpsError) throw err;
     console.error("redeemInvite failed", err);
@@ -247,3 +264,53 @@ export const listInvites = onCall(async (request) => {
 
   return { invites };
 });
+
+export const onChatMessageCreated = onDocumentCreated(
+  "chats/{chatId}/messages/{messageId}",
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+
+    const message = snap.data();
+    const chatId = event.params.chatId;
+    const senderId = message.senderId as string | undefined;
+    if (!senderId) return;
+
+    const chatDoc = await db.collection("chats").doc(chatId).get();
+    if (!chatDoc.exists) return;
+
+    const members = (chatDoc.data()?.members as string[]) ?? [];
+    const recipientIds = members.filter((m) => m !== senderId);
+    if (recipientIds.length === 0) return;
+
+    const tokens: string[] = [];
+    for (const uid of recipientIds) {
+      const userSnap = await db.collection("users").doc(uid).get();
+      const userTokens = userSnap.data()?.fcmTokens as string[] | undefined;
+      if (userTokens?.length) tokens.push(...userTokens);
+    }
+    const unique = [...new Set(tokens)].filter(Boolean);
+    if (unique.length === 0) return;
+
+    const preview =
+      (message.text as string | undefined)?.trim() ||
+      (message.type === "image"
+        ? "Фото"
+        : message.type === "voice"
+          ? "Голосовое"
+          : "Новое сообщение");
+
+    try {
+      await getMessaging().sendEachForMulticast({
+        tokens: unique,
+        notification: {
+          title: "Семья",
+          body: preview,
+        },
+        data: { chatId, type: "chat_message" },
+      });
+    } catch (err) {
+      console.error("FCM send failed", err);
+    }
+  },
+);

@@ -68,6 +68,35 @@ class ChatRepository {
     return chatId;
   }
 
+  /// Marks unread messages from others as read by [readerId].
+  Future<void> markMessagesRead({
+    required String chatId,
+    required String readerId,
+  }) async {
+    final snap = await _chats
+        .doc(chatId)
+        .collection('messages')
+        .orderBy('createdAt', descending: true)
+        .limit(50)
+        .get();
+
+    final batch = _firestore.batch();
+    var count = 0;
+    for (final doc in snap.docs) {
+      final data = doc.data();
+      final senderId = data['senderId'] as String? ?? '';
+      if (senderId == readerId) continue;
+      final readBy = List<String>.from(data['readBy'] as List? ?? []);
+      if (readBy.contains(readerId)) continue;
+      batch.update(doc.reference, {
+        'readBy': FieldValue.arrayUnion([readerId]),
+      });
+      count++;
+      if (count >= 20) break;
+    }
+    if (count > 0) await batch.commit();
+  }
+
   Future<void> sendTextMessage({
     required String chatId,
     required String senderId,
@@ -91,6 +120,73 @@ class ChatRepository {
         'text': text.trim(),
         'senderId': senderId,
         'type': 'text',
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+  }
+
+  Future<void> sendImageMessage({
+    required String chatId,
+    required String senderId,
+    required String mediaUrl,
+    String? caption,
+  }) async {
+    final batch = _firestore.batch();
+    final msgRef = _chats.doc(chatId).collection('messages').doc();
+    final chatRef = _chats.doc(chatId);
+    final preview = caption?.trim().isNotEmpty == true ? caption!.trim() : 'Фото';
+
+    batch.set(msgRef, {
+      'senderId': senderId,
+      'type': 'image',
+      'mediaUrl': mediaUrl,
+      if (caption != null && caption.trim().isNotEmpty) 'text': caption.trim(),
+      'createdAt': FieldValue.serverTimestamp(),
+      'readBy': [senderId],
+      'status': 'sent',
+    });
+
+    batch.update(chatRef, {
+      'lastMessage': {
+        'text': preview,
+        'senderId': senderId,
+        'type': 'image',
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+  }
+
+  Future<void> sendVoiceMessage({
+    required String chatId,
+    required String senderId,
+    required String mediaUrl,
+    required int durationMs,
+  }) async {
+    final batch = _firestore.batch();
+    final msgRef = _chats.doc(chatId).collection('messages').doc();
+    final chatRef = _chats.doc(chatId);
+
+    batch.set(msgRef, {
+      'senderId': senderId,
+      'type': 'voice',
+      'mediaUrl': mediaUrl,
+      'durationMs': durationMs,
+      'createdAt': FieldValue.serverTimestamp(),
+      'readBy': [senderId],
+      'status': 'sent',
+    });
+
+    batch.update(chatRef, {
+      'lastMessage': {
+        'text': 'Голосовое',
+        'senderId': senderId,
+        'type': 'voice',
         'createdAt': FieldValue.serverTimestamp(),
       },
       'updatedAt': FieldValue.serverTimestamp(),

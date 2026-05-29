@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../../core/errors/app_errors.dart';
 import '../../../core/providers/session_provider.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/invite_repository.dart';
@@ -107,7 +108,7 @@ class _OwnerSetupScreenState extends ConsumerState<OwnerSetupScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
+          SnackBar(content: Text(friendlyErrorMessage(e))),
         );
       }
     } finally {

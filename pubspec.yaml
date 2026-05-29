@@ -20,7 +20,12 @@ dependencies:
   uuid: ^4.5.1
   shared_preferences: ^2.3.3
   cupertino_icons: ^1.0.8
-  # image_picker, record, just_audio — вернём с CocoaPods (см. README)
+  firebase_messaging: ^15.1.5
+  image_picker: ^1.1.2
+  record: ^5.2.0
+  just_audio: ^0.9.42
+  path_provider: ^2.1.5
+  flutter_webrtc: ^0.12.4
 
 dev_dependencies:
   flutter_test:

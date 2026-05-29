@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
+import 'app_check_bootstrap.dart';
 import 'firebase_app_holder.dart';
 import 'firebase_options_emulator.dart';
 
@@ -56,6 +57,8 @@ Future<bool> _bootstrapFirebaseOnce() async {
 
     if (useLocal) {
       await _connectEmulators();
+    } else {
+      await activateAppCheckIfNeeded(useEmulators: false);
     }
 
     _bootstrapDone = true;

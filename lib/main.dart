@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/firebase/firebase_bootstrap.dart';
+import 'core/messaging/push_messaging_service.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/providers/session_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,11 +17,37 @@ Future<void> main() async {
   runApp(const ProviderScope(child: FamilyMessengerApp()));
 }
 
-class FamilyMessengerApp extends ConsumerWidget {
+class FamilyMessengerApp extends ConsumerStatefulWidget {
   const FamilyMessengerApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FamilyMessengerApp> createState() => _FamilyMessengerAppState();
+}
+
+class _FamilyMessengerAppState extends ConsumerState<FamilyMessengerApp> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(pushMessagingServiceProvider).initialize();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(pendingChatRouteProvider, (prev, next) {
+      if (next != null && next.isNotEmpty) {
+        ref.read(appRouterProvider).go(next);
+        ref.read(pendingChatRouteProvider.notifier).state = null;
+      }
+    });
+
+    ref.listen(sessionProvider, (prev, next) {
+      if (next.hasProfile && prev?.hasProfile != true) {
+        ref.read(pushMessagingServiceProvider).initialize();
+      }
+    });
+
     if (!isFirebaseBootstrapOk) {
       return MaterialApp(
         theme: AppTheme.light,

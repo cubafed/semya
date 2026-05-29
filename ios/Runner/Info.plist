@@ -28,6 +28,16 @@
 	<true/>
 	<key>FirebaseAppDelegateProxyEnabled</key>
 	<false/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Нужен микрофон для голосовых сообщений и звонков.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Нужна камера для фото в чате.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Нужен доступ к фото для аватара и вложений.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

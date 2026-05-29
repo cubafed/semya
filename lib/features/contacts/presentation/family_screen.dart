@@ -2,14 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/errors/app_errors.dart';
 import '../../../core/providers/session_provider.dart';
 import '../../../data/models/app_user.dart';
+import '../../../data/repositories/call_repository.dart';
 import '../../../data/repositories/chat_repository.dart';
 import '../../../data/repositories/user_repository.dart';
+import '../../../shared/widgets/user_avatar.dart';
 
 final familyMembersProvider = StreamProvider.autoDispose<List<AppUser>>((ref) {
   final spaceId = ref.watch(sessionProvider).appUser?.spaceId;
-  if (spaceId == null || spaceId.isEmpty) return const Stream.empty();
+  if (spaceId == null || spaceId.isEmpty) {
+    return Stream.value(const []);
+  }
   return ref.watch(userRepositoryProvider).watchSpaceMembers(spaceId);
 });
 
@@ -37,21 +42,33 @@ class FamilyScreen extends ConsumerWidget {
             itemBuilder: (context, i) {
               final member = others[i];
               return ListTile(
-                leading: CircleAvatar(
-                  child: Text(member.displayName.characters.first.toUpperCase()),
+                leading: UserAvatar(
+                  displayName: member.displayName,
+                  photoUrl: member.photoUrl,
                 ),
                 title: Text(member.displayName),
                 subtitle: Text(
                   member.role == UserRole.owner ? 'Владелец' : 'Участник',
                 ),
-                trailing: const Icon(Icons.chat_outlined),
-                onTap: () => _openChat(context, ref, member),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.call_outlined),
+                      onPressed: () => _startCall(context, ref, member),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.chat_outlined),
+                      onPressed: () => _openChat(context, ref, member),
+                    ),
+                  ],
+                ),
               );
             },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
+        error: (e, _) => Center(child: Text(friendlyErrorMessage(e))),
       ),
     );
   }
@@ -74,7 +91,35 @@ class FamilyScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
+          SnackBar(content: Text(friendlyErrorMessage(e))),
+        );
+      }
+    }
+  }
+
+  Future<void> _startCall(
+    BuildContext context,
+    WidgetRef ref,
+    AppUser peer,
+  ) async {
+    final me = ref.read(sessionProvider).appUser;
+    if (me == null) return;
+
+    try {
+      final callId = await ref.read(callRepositoryProvider).createOutgoingCall(
+            callerId: me.uid,
+            calleeId: peer.uid,
+          );
+      if (context.mounted) {
+        context.push(
+          '/call/$callId',
+          extra: {'peer': peer, 'isOutgoing': true},
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(friendlyErrorMessage(e))),
         );
       }
     }

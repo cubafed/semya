@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/errors/app_errors.dart';
 import '../../../core/providers/session_provider.dart';
 import '../../../data/repositories/auth_repository.dart';
 
@@ -100,7 +101,7 @@ class _AuthGateState extends ConsumerState<AuthGate> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка входа: $e')),
+          SnackBar(content: Text(friendlyErrorMessage(e))),
         );
       }
     } finally {
