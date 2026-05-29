@@ -50,7 +50,9 @@ bash scripts/open_xcode.sh
 2. Сверху: схема **Runner**, устройство **iPhone 17 Pro** (или любой iPhone Simulator).
 3. **Product → Run** (⌘R).
 
-При первом запуске: **Runner → Signing & Capabilities** → Team = ваш Apple ID.
+При первом запуске: **Runner → Signing & Capabilities** → **Team** = ваш Apple ID (нужно для Keychain / Firebase Auth; без Team будет `keychain-error`).
+
+Если снова `keychain-error`: **Device → Erase All Content and Settings** в Simulator, затем ⌘R в Xcode.
 
 Секрет владельца в dev: **`dev-local-secret`** (уже по умолчанию при эмуляторах).
 

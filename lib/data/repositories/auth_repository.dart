@@ -16,7 +16,20 @@ class AuthRepository {
 
   User? get currentUser => _auth.currentUser;
 
-  Future<UserCredential> signInAnonymously() => _auth.signInAnonymously();
+  Future<UserCredential> signInAnonymously() async {
+    try {
+      return await _auth.signInAnonymously();
+    } on FirebaseAuthException catch (e) {
+      // iOS Simulator: stale keychain after reinstall — retry once after signOut.
+      if (e.code == 'keychain-error') {
+        try {
+          await _auth.signOut();
+        } catch (_) {}
+        return _auth.signInAnonymously();
+      }
+      rethrow;
+    }
+  }
 
   Future<void> signOut() => _auth.signOut();
 }
