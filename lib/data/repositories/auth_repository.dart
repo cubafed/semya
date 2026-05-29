@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/firebase/firebase_app_holder.dart';
+
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepository(FirebaseAuth.instance);
+  return AuthRepository(familyAuth);
 });
 
 class AuthRepository {

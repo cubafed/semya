@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/firebase/firebase_app_holder.dart';
 import '../models/app_user.dart';
 
 final userRepositoryProvider = Provider<UserRepository>((ref) {
-  return UserRepository(FirebaseFirestore.instance);
+  return UserRepository(familyFirestore);
 });
 
 class UserRepository {

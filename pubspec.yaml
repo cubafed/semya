@@ -16,19 +16,11 @@ dependencies:
   cloud_firestore: ^5.5.1
   cloud_functions: ^5.2.1
   firebase_storage: ^12.3.7
-  firebase_messaging: ^15.1.6
-  firebase_crashlytics: ^4.2.0
-  firebase_app_check: ^0.3.1+6
   intl: ^0.19.0
   uuid: ^4.5.1
   shared_preferences: ^2.3.3
-  cached_network_image: ^3.4.1
-  image_picker: ^1.1.2
-  flutter_image_compress: ^2.3.0
-  record: ^5.2.0
-  just_audio: ^0.9.42
-  permission_handler: ^11.3.1
   cupertino_icons: ^1.0.8
+  # image_picker, record, just_audio — вернём с CocoaPods (см. README)
 
 dev_dependencies:
   flutter_test:

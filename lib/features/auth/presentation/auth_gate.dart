@@ -19,13 +19,38 @@ class _AuthGateState extends ConsumerState<AuthGate> {
   Widget build(BuildContext context) {
     final session = ref.watch(sessionProvider);
 
+    if (session.firebaseUnavailable) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.cloud_off, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  'Firebase недоступен. Запустите эмуляторы и перезапустите приложение.',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     if (session.isLoading || _starting) {
       return const Scaffold(
+        backgroundColor: Colors.white,
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),

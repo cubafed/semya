@@ -23,6 +23,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final session = ref.read(sessionProvider);
       final loc = state.matchedLocation;
 
+      if (session.firebaseUnavailable) return null;
+
       if (session.isLoading) return null;
 
       if (!session.isAuthenticated) {

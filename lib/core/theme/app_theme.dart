@@ -13,6 +13,8 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
+      scaffoldBackgroundColor: colorScheme.surface,
+      brightness: Brightness.light,
       appBarTheme: AppBarTheme(
         centerTitle: false,
         backgroundColor: colorScheme.surface,

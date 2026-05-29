@@ -2,11 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/firebase/firebase_app_holder.dart';
 import '../models/chat.dart';
 import '../models/message.dart';
 
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
-  return ChatRepository(FirebaseFirestore.instance);
+  return ChatRepository(familyFirestore);
 });
 
 class ChatRepository {
