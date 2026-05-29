@@ -28,3 +28,10 @@ Thumbs.db
 # Functions
 functions/node_modules/
 functions/lib/
+
+# Firebase / Flutter debug logs
+firebase-debug.log
+firestore-debug.log
+storage-debug.log
+ui-debug.log
+flutter_*.log
